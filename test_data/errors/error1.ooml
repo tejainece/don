@@ -1,0 +1,3 @@
+.movie (
+    .name = "Some movie"
+)

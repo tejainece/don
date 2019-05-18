@@ -1,0 +1,8 @@
+let $militia = {
+  hp: 60
+  speed: 0.9
+}
+
+militia: $militia
+
+champion: $militia

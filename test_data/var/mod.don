@@ -1,0 +1,10 @@
+let $militia = {
+  hp: 60
+  speed: 0.9
+}
+
+units.militia: $militia
+
+units.champion: $militia
+
+# set champion.hp += 10

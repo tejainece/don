@@ -1,0 +1,20 @@
+let $militia = {
+  hp: 60
+  speed: 0.9
+}
+
+militia: $militia
+
+champion: $militia
+
+set champion = {
+  hp += 10
+  speed += 0.1
+  something += {
+
+  } -= {
+
+  }
+}
+
+set champion.hp += 10

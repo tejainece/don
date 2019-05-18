@@ -1,0 +1,6 @@
+name:  "teja"
+age:  30
+place:  {
+  city:  "Stockholm"
+  country:  "Sweden"
+}

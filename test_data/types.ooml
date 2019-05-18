@@ -1,0 +1,11 @@
+type Person = {
+  name  String
+  age   Int
+  addr  Address
+}
+
+type Place = {
+  country  String
+  city     String
+}
+
