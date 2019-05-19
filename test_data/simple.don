@@ -1,6 +1,12 @@
 name = "teja"
 age = 30
-place = {
-  city = "Stockholm"
-  country = "Sweden"
-}
+places = [
+  {
+    city = "Stockholm"
+    country = "Sweden"
+  },
+  {
+    city = "Berlin"
+    country = "Germany"
+  }
+]

@@ -3,6 +3,12 @@ let $militia = {
   speed = 0.9
 }
 
+let $archer = {
+  hp = 30
+  speed = 0.9
+  range = 5
+}
+
 let $units = [
   $militia,
   $militia,
@@ -14,3 +20,5 @@ units += $militia
 units += $militia
 
 units *= $units
+
+units[0] = $archer
