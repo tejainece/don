@@ -1,3 +1,3 @@
-name:  "teja"
-age 30
-country:  "stockholm"
+name = "teja"
+age = 30
+country = "stockholm"

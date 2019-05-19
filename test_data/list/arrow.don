@@ -1,14 +1,14 @@
-dog: {
-  name:  "dog"
-  sound:  "bow bow"
-  limbs: [
-  > left:  true
-    front:  true
-  > left:  false
-    front:  true
-  > left:  true
-    front:  false
-  > left:  false
-    front:  false
+dog = {
+  name = "dog"
+  sound = "bow bow"
+  limbs = [
+  > left = true
+    front = true
+  > left = false
+    front = true
+  > left = true
+    front = false
+  > left = false
+    front = false
   ]
 }

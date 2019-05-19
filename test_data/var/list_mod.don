@@ -1,0 +1,16 @@
+let $militia = {
+  hp = 60
+  speed = 0.9
+}
+
+let $units = [
+  $militia,
+  $militia,
+]
+
+units = []
+
+units += $militia
+units += $militia
+
+units *= $units

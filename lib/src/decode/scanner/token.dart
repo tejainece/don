@@ -24,10 +24,9 @@ enum TokenType {
   // Operators
   dot,
   comma,
-  colon,
+  assign,
   semicolon,
 
-  equal,
   addAssign,
   subAssign,
   mulAssign,
@@ -68,7 +67,6 @@ enum TokenType {
   identifier,
 
   let,
-  set,
 }
 
 final normalPatterns = <Pattern, TokenType>{
@@ -76,11 +74,10 @@ final normalPatterns = <Pattern, TokenType>{
   '\n': TokenType.newLine,
 
   '.': TokenType.dot,
-  ':': TokenType.colon,
+  '=': TokenType.assign,
   ',': TokenType.comma,
   ';': TokenType.semicolon,
 
-  '=': TokenType.equal,
   '+=': TokenType.addAssign,
   '-=': TokenType.subAssign,
   '*=': TokenType.mulAssign,
@@ -98,7 +95,6 @@ final normalPatterns = <Pattern, TokenType>{
   '>': TokenType.rightAngleBracket,
 
   'let': TokenType.let,
-  'set': TokenType.set,
 
   'false': TokenType.false_,
   'true': TokenType.true_,

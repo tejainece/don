@@ -1,10 +1,11 @@
 let $militia = {
-  hp: 60
-  speed: 0.9
+  hp= 60
+  speed= 0.9
 }
 
-units.militia: $militia
+units.militia = $militia
 
-units.champion: $militia
+units.champion = $militia
 
-# set champion.hp += 10
+units.champion.speed = 1.0
+units.champion.hp += 40

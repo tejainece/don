@@ -25,5 +25,13 @@ void main() {
       // final compare = json.decode(await File("test_data/var/var.json").readAsString());
       // expect(value, equals(compare));
     });
+
+    test('List mod', () async {
+      final inputStr = await File("test_data/var/list_mod.don").readAsString();
+      final value = decode(inputStr);
+      print(JsonEncoder.withIndent('  ').convert(value));
+      // final compare = json.decode(await File("test_data/var/var.json").readAsString());
+      // expect(value, equals(compare));
+    });
   });
 }

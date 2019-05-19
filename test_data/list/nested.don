@@ -1,76 +1,76 @@
 [
   [
-    name:  "dog"
-    sound:  "bow bow"
-    limbs:  [
+    name =  "dog"
+    sound =  "bow bow"
+    limbs =  [
     {
-      left:  true
-      front:  true
+      left =  true
+      front =  true
     }, {
-      left:  false
-      front:  true
+      left =  false
+      front =  true
     }, {
-      left:  true
-      front:  false
+      left =  true
+      front =  false
     }, {
-      left:  false
-      front:  false
+      left =  false
+      front =  false
     }
     ]
     ,
-    name:  "cat"
-    sound:  "meow meow"
-    limbs:  [
+    name =  "cat"
+    sound =  "meow meow"
+    limbs =  [
     {
-      left:  true
-      front:  true
+      left =  true
+      front =  true
     }, {
-      left:  false
-      front:  true
+      left =  false
+      front =  true
     }, {
-      left:  true
-      front:  false
+      left =  true
+      front =  false
     }, {
-      left:  false
-      front:  false
+      left =  false
+      front =  false
     }
     ]
   ]
   ,
   [
-      name:  "dog"
-      sound:  "bow bow"
-      limbs:  [
+      name =  "dog"
+      sound =  "bow bow"
+      limbs =  [
       {
-          left:  true
-          front:  true
+          left =  true
+          front =  true
       }, {
-          left:  false
-          front:  true
+          left =  false
+          front =  true
       }, {
-          left:  true
-          front:  false
+          left =  true
+          front =  false
       }, {
-          left:  false
-          front:  false
+          left =  false
+          front =  false
       }
       ]
       ,
-      name:  "cat"
-      sound:  "meow meow"
-      limbs:  [
+      name =  "cat"
+      sound =  "meow meow"
+      limbs =  [
       {
-          left:  true
-          front:  true
+          left =  true
+          front =  true
       }, {
-          left:  false
-          front:  true
+          left =  false
+          front =  true
       }, {
-          left:  true
-          front:  false
+          left =  true
+          front =  false
       }, {
-          left:  false
-          front:  false
+          left =  false
+          front =  false
       }
       ]
   ]

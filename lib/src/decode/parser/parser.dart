@@ -1,6 +1,7 @@
 import '../scanner/scanner.dart';
 import '../ast/ast.dart';
 import 'state.dart';
+import 'package:don/src/decode/error/error.dart';
 
 part 'member.dart';
 part 'set.dart';
@@ -28,10 +29,6 @@ class Parser {
       } else if (token.type == TokenType.let) {
         final Let let = LetParser.parse(_state);
         variables[let.name] = let.value;
-      } else if (token.type == TokenType.set) {
-        throw UnimplementedError("Set expression not implemented yet");
-        // final Let let = SetPar.parse(_state);
-        // variables[let.name] = let.value;
       } else if (token.type == TokenType.comment) {
         _state.consume();
       } else {
@@ -89,12 +86,13 @@ class MapEntryParser {
 
     final key = MapKeyParser.parse(state);
 
-    if (state.consumeIf(TokenType.colon) == null) {
+    final op = AssignOpParser.parse(state);
+    if (op == null) {
       throw Exception("Map entry must contain operator");
     }
 
     final value = ValueParser.parse(state);
-    return MapEntryValue(key, value);
+    return MapEntryValue(key, value, op: op);
   }
 }
 
@@ -145,6 +143,10 @@ class ListParser {
     }
 
     state.consumeMany(TokenType.newLine);
+
+    if (state.consumeIf(TokenType.rightSquareBracket) != null) {
+      return ListValue([]);
+    }
 
     bool rawMap = false;
     if (state.peek().type == TokenType.key) rawMap = true;
@@ -198,8 +200,13 @@ class LetParser {
     }
 
     final identifier = state.consumeIf(TokenType.identifier);
+    if(identifier == null) {
+      throw SyntaxError("Identifier expected in 'let' expression");
+    }
 
-    state.consumeIf(TokenType.equal);
+    if(state.consumeIf(TokenType.assign) == null) {
+      throw SyntaxError("Assign operator ':' missing in Let statement");
+    }
 
     final value = ValueParser.parse(state);
 

@@ -28,6 +28,10 @@ class MapValue implements Value, AstNode {
 
     return sb.toString();
   }
+
+  factory MapValue.empty() {
+    return MapValue([]);
+  }
 }
 
 class AssignOp {
@@ -39,9 +43,17 @@ class AssignOp {
 
   const AssignOp._(this.id, this.name, this.rep);
 
+  bool get isAssign => this == assign;
+
+  bool get isAddAssign => this == addAssign;
+
+  bool get isMulAssign => this == mulAssign;
+
   static const assign = AssignOp._(0, '=', 'Equal');
 
-  static const addAssign = AssignOp._(0, '+=', 'Add assign');
+  static const addAssign = AssignOp._(1, '+=', 'Add assign');
+
+  static const mulAssign = AssignOp._(2, '*=', 'Multiply assign');
 }
 
 class MapEntryValue implements AstNode {
@@ -62,6 +74,8 @@ abstract class SimpleValue<T> implements Value {
   T get value;
 }
 
+abstract class NumberValue<T extends num> implements SimpleValue<T> {}
+
 class StringValue implements SimpleValue<String>, Value, AstNode {
   final String value;
 
@@ -71,7 +85,7 @@ class StringValue implements SimpleValue<String>, Value, AstNode {
   String toString() => value;
 }
 
-class IntValue implements SimpleValue<int>, Value, AstNode {
+class IntValue implements NumberValue<int>, Value, AstNode {
   final int value;
 
   IntValue(this.value);
@@ -80,7 +94,7 @@ class IntValue implements SimpleValue<int>, Value, AstNode {
   String toString() => value.toString();
 }
 
-class DoubleValue implements SimpleValue<double>, Value, AstNode {
+class DoubleValue implements NumberValue<double>, Value, AstNode {
   final double value;
 
   DoubleValue(this.value);

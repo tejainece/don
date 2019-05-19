@@ -1,8 +1,8 @@
 dog {
-  name:  "dog"
-  sound:  "bow bow"
-  friend: {
-    name:  "cat"
-    sound:  "meow meow"
+  name = "dog"
+  sound = "bow bow"
+  friend = {
+    name = "cat"
+    sound = "meow meow"
   }
 }
