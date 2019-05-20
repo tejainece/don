@@ -7,7 +7,7 @@ class MapKeyParser {
       throw Exception("Variable expected!");
     }
 
-    final accesses = <MemberAccess>[];
+    final accesses = <Access>[];
 
     while(!state.done) {
       final next = state.peek();
@@ -19,6 +19,8 @@ class MapKeyParser {
           throw Exception("Key expected!");
         }
         accesses.add(MemberAccess(key.text));
+      } else if(next.type == TokenType.leftSquareBracket) {
+        accesses.add(SubscriptParser.parse(state));
       } else {
         break;
       }

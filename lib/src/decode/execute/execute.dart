@@ -11,7 +11,7 @@ class Variables {
       if (access is MemberAccess) {
         data = _getFromMap(data, access.member);
       } else if (access is SubscriptAccess) {
-        final Value val = access.value;
+        final Value val = access.index;
         // TODO handle expression
         if (val is IntValue) {
           data = _getFromList(data, val.value);
@@ -69,37 +69,37 @@ dynamic _value(
     throw UnimplementedError("Unknown value type ${value?.runtimeType}");
   }
 
-  if(oldValue is bool) {
+  if (oldValue is bool) {
     throw UnsupportedError("Operators are not supported on bool");
   }
 
   if (value is VarUse) {
     final v = variables.get(value);
-    if(v == null) {
+    if (v == null) {
       throw Exception("Variable not found");
     }
 
-    if(oldValue is Map) {
-      if(!op.isAddAssign) {
+    if (oldValue is Map) {
+      if (!op.isAddAssign) {
         throw Exception("Invalid operator on Map");
       }
-      if(v is Map) {
+      if (v is Map) {
         oldValue.addAll(v);
         return oldValue;
       }
       throw Exception("Invalid assignment");
     }
 
-    if(oldValue is List) {
-      if(v == null) {
+    if (oldValue is List) {
+      if (v == null) {
         throw Exception("Variable not found");
       }
-      if(op.isAddAssign) {
+      if (op.isAddAssign) {
         oldValue.add(v);
         return oldValue;
       }
-      if(op.isMulAssign) {
-        if(v is! List) {
+      if (op.isMulAssign) {
+        if (v is! List) {
           throw Exception("Target not List");
         }
         oldValue.addAll(v);
@@ -109,27 +109,27 @@ dynamic _value(
     }
   }
 
-  if(oldValue is Map) {
-    if(value is! MapValue) {
+  if (oldValue is Map) {
+    if (value is! MapValue) {
       throw Exception("Invalid assignment");
     }
     return _map(oldValue, op, value, variables);
   }
   if (oldValue is List) {
-    if(value is! ListValue) {
+    if (value is! ListValue) {
       throw Exception("Invalid assignment");
     }
     return _list(oldValue, op, value, variables);
   }
 
-  if(oldValue is num) {
+  if (oldValue is num) {
     if (value is NumberValue) {
       return oldValue + value.value;
     }
     throw Exception("Invalid assignment");
   }
 
-  if(oldValue is String) {
+  if (oldValue is String) {
     if (value is StringValue) {
       return oldValue + value.value;
     }
@@ -143,7 +143,7 @@ Map _map(dynamic oldValue, AssignOp op, MapValue value, Variables variables) {
   if ((oldValue != null && oldValue is! Map) && op != AssignOp.assign) {
     throw Exception("Cannot modify Map with non Map");
   }
-  Map ret = oldValue == null ? {} : oldValue;
+  final Map ret = oldValue == null ? {} : oldValue;
 
   for (MapEntryValue mapEntry in value.values) {
     if (mapEntry.key.accesses.isEmpty) {
@@ -154,19 +154,77 @@ Map _map(dynamic oldValue, AssignOp op, MapValue value, Variables variables) {
       final v = _value(old, mapEntry.op, mapEntry.value, variables);
       ret[mapEntry.key.identifier] = v;
     } else {
-      var m = ret[mapEntry.key.identifier] = _map(ret[mapEntry.key.identifier],
-          AssignOp.addAssign, MapValue.empty(), variables);
-      for (int i = 0; i < mapEntry.key.accesses.length - 1; i++) {
-        final d = mapEntry.key.accesses[i];
-        final nm =
-            _map(m[d.member], AssignOp.addAssign, MapValue.empty(), variables);
-        m = m[d.member] = nm;
+      var m;
+      {
+        Access next = mapEntry.key.accesses.first;
+        final ov = ret[mapEntry.key.identifier];
+        if (next is MemberAccess) {
+          if (ov != null && ov is! Map) {
+            throw Exception("Member access on non-Map value");
+          }
+          m = ov ?? {};
+        } else if (next is SubscriptAccess) {
+          if (ov != null && ov is! List) {
+            throw Exception("Subscript access on non-List value");
+          }
+          m = ov ?? [];
+        }
+        ret[mapEntry.key.identifier] = m;
       }
-      m[mapEntry.key.accesses.last.member] = _value(
-          m[mapEntry.key.accesses.last.member],
-          mapEntry.op,
-          mapEntry.value,
-          variables);
+      for (int i = 0; i < mapEntry.key.accesses.length - 1; i++) {
+        Access next = mapEntry.key.accesses[i + 1];
+        final cur = mapEntry.key.accesses[i];
+        if (cur is MemberAccess) {
+          final ov = m[cur.member];
+
+          if (next is MemberAccess) {
+            if (ov != null && ov is! Map) {
+              throw Exception("Member access on non-Map value");
+            }
+            m = m[cur.member] = ov ?? {};
+          } else if (next is SubscriptAccess) {
+            if (ov != null && ov is! List) {
+              throw Exception("Subscript access on non-List value");
+            }
+            m = m[cur.member] = ov ?? [];
+          }
+        } else if (cur is SubscriptAccess) {
+          int index;
+          if (cur.index is IntValue) {
+            index = (cur.index as IntValue).value;
+          } else {
+            throw Exception("Unknown index type");
+          }
+          final ov = m[index];
+          if (next is MemberAccess) {
+            if (ov != null && ov is! Map) {
+              throw Exception("Member access on non-Map value");
+            }
+            m = m[index] = ov ?? {};
+          } else if (next is SubscriptAccess) {
+            if (ov != null && ov is! List) {
+              throw Exception("Subscript access on non-List value");
+            }
+            m = m[index] = ov ?? [];
+          }
+        }
+      }
+
+      {
+        final cur = mapEntry.key.accesses.last;
+        if (cur is MemberAccess) {
+          m[cur.member] =
+              _value(m[cur.member], mapEntry.op, mapEntry.value, variables);
+        } else if (cur is SubscriptAccess) {
+          int index;
+          if (cur.index is IntValue) {
+            index = (cur.index as IntValue).value;
+          } else {
+            throw Exception("Unknown index type");
+          }
+          m[index] = _value(m[index], mapEntry.op, mapEntry.value, variables);
+        }
+      }
     }
   }
 
@@ -187,6 +245,21 @@ List<dynamic> _list(
   }
 
   return ret;
+}
+
+List<dynamic> _listAccess(List oldValue, int index) {
+  if (oldValue == null) {
+    if (index != 0) {
+      throw Exception(
+          "Index out of range. Only index '0' is accessible on undefined list");
+    }
+  }
+
+  if (index >= oldValue.length) {
+    throw Exception("Index out of range");
+  }
+
+  return oldValue[index];
 }
 
 class Clone {

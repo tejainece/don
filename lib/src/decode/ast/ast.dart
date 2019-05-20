@@ -165,9 +165,9 @@ abstract class Access implements AstNode {
 }
 
 class SubscriptAccess implements Access {
-  final Value value;
+  final Value index;
 
-  SubscriptAccess(this.value);
+  SubscriptAccess(this.index);
 }
 
 class MemberAccess implements Access {
@@ -187,7 +187,7 @@ class VarUse implements Value, AstNode {
 class KeyChain implements Value, AstNode {
   final String identifier;
 
-  final List<MemberAccess> accesses;
+  final List<Access> accesses;
 
   KeyChain(this.identifier, this.accesses);
 }

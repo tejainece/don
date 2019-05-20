@@ -1,0 +1,12 @@
+{
+  "units": {
+    "militia": {
+      "hp": 60,
+      "speed": 0.9
+    },
+    "champion": {
+      "hp": 100,
+      "speed": 1.0
+    }
+  }
+}

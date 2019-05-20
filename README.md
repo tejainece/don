@@ -91,4 +91,6 @@ type Person = {
 + [ ] Syntax highlighting
 + [ ] Types
 + [ ] Type/schema checking
++ [ ] Associate spans to AST
++ [ ] Better errors
 
