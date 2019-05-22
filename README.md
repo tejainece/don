@@ -87,8 +87,8 @@ type Person = {
 
 # Features
 
-+ [ ] Encode
-+ [ ] Pretty printer
++ [ ] Expressions
++ [ ] Concise encoder
 + [ ] Formatter
 + [ ] Analyzer
 + [ ] Built-in Date support
