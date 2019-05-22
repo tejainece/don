@@ -1,10 +1,11 @@
+import 'package:don/parser.dart';
 import 'package:source_span/source_span.dart';
 import '../scanner/scanner.dart';
 
 part 'comment.dart';
 
 abstract class AstNode {
-  // TODO final FileSpan span;
+  FileSpan get span;
 
   // TODO final List<Comment> comments;
 
@@ -14,9 +15,11 @@ abstract class AstNode {
 }
 
 class MapValue implements Value, AstNode {
+  final FileSpan span;
+
   final List<MapEntryValue> values;
 
-  MapValue(this.values);
+  MapValue(this.span, this.values);
 
   @override
   String toString() {
@@ -30,40 +33,40 @@ class MapValue implements Value, AstNode {
   }
 
   factory MapValue.empty() {
-    return MapValue([]);
+    return MapValue(null, []);
   }
 }
 
-class AssignOp {
-  final int id;
+class AssignOp implements AstNode {
+  final FileSpan span;
 
-  final String rep;
+  final TokenType type;
 
-  final String name;
+  AssignOp(this.span, this.type);
 
-  const AssignOp._(this.id, this.name, this.rep);
+  factory AssignOp.fromToken(Token token) => AssignOp(token.span, token.type);
 
-  bool get isAssign => this == assign;
+  AssignOp.mkAssign(this.span): type = TokenType.assign;
 
-  bool get isAddAssign => this == addAssign;
+  bool get isAssign => type == TokenType.assign;
 
-  bool get isMulAssign => this == mulAssign;
+  bool get isAddAssign => type == TokenType.addAssign;
 
-  static const assign = AssignOp._(0, '=', 'Equal');
+  bool get isMulAssign => type == TokenType.mulAssign;
 
-  static const addAssign = AssignOp._(1, '+=', 'Add assign');
-
-  static const mulAssign = AssignOp._(2, '*=', 'Multiply assign');
+  String toString() => type.toString();
 }
 
 class MapEntryValue implements AstNode {
+  final FileSpan span;
+
   final KeyChain key;
 
   final Value value;
 
   final AssignOp op;
 
-  MapEntryValue(this.key, this.value, {this.op = AssignOp.assign});
+  MapEntryValue(this.span, this.key, this.value, this.op);
 
   String toString() => '$key: $value';
 }
@@ -77,45 +80,55 @@ abstract class SimpleValue<T> implements Value {
 abstract class NumberValue<T extends num> implements SimpleValue<T> {}
 
 class StringValue implements SimpleValue<String>, Value, AstNode {
+  final FileSpan span;
+
   final String value;
 
-  StringValue(this.value);
+  StringValue(this.span, this.value);
 
   @override
   String toString() => value;
 }
 
 class IntValue implements NumberValue<int>, Value, AstNode {
+  final FileSpan span;
+
   final int value;
 
-  IntValue(this.value);
+  IntValue(this.span, this.value);
 
   @override
   String toString() => value.toString();
 }
 
 class DoubleValue implements NumberValue<double>, Value, AstNode {
+  final FileSpan span;
+
   final double value;
 
-  DoubleValue(this.value);
+  DoubleValue(this.span, this.value);
 
   @override
   String toString() => value.toString();
 }
 
 class BoolValue implements SimpleValue<bool>, Value, AstNode {
+  final FileSpan span;
+
   final bool value;
 
-  BoolValue(this.value);
+  BoolValue(this.span, this.value);
 
   @override
   String toString() => value.toString();
 }
 
 class ListValue implements Value, AstNode {
+  final FileSpan span;
+
   final List<Value> values;
 
-  ListValue(this.values);
+  ListValue(this.span, this.values);
 
   @override
   String toString() {
@@ -130,11 +143,13 @@ class ListValue implements Value, AstNode {
 }
 
 class Let implements AstNode {
+  final FileSpan span;
+
   final String name;
 
   final Value value;
 
-  Let(this.name, this.value);
+  Let(this.span, this.name, this.value);
 }
 
 class Unit {
@@ -157,37 +172,55 @@ class Unit {
 }
 
 class Expression implements Value {
+  final FileSpan span;
+
   // TODO
+
+  Expression(this.span);
 }
 
-abstract class Access implements AstNode {
-
-}
+abstract class Access implements AstNode {}
 
 class SubscriptAccess implements Access {
+  final FileSpan span;
+
   final Value index;
 
-  SubscriptAccess(this.index);
+  SubscriptAccess(this.span, this.index);
 }
 
 class MemberAccess implements Access {
+  final FileSpan span;
+
   final String member;
 
-  MemberAccess(this.member);
+  MemberAccess(this.span, this.member);
 }
 
 class VarUse implements Value, AstNode {
+  final FileSpan span;
+
   final String identifier;
 
   final List<Access> accesses;
 
-  VarUse(this.identifier, this.accesses);
+  VarUse(this.span, this.identifier, this.accesses);
+
+  factory VarUse.fromToken(Token token, List<Access> accesses) {
+    return VarUse(token.span, token.text, accesses);
+  }
 }
 
 class KeyChain implements Value, AstNode {
+  final FileSpan span;
+
   final String identifier;
 
   final List<Access> accesses;
 
-  KeyChain(this.identifier, this.accesses);
+  KeyChain(this.span, this.identifier, this.accesses);
+
+  factory KeyChain.fromToken(Token token, List<Access> accesses) {
+    return KeyChain(token.span, token.text, accesses);
+  }
 }

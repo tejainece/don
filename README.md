@@ -1,4 +1,4 @@
-# BON
+# DON
 
 Basic Object Notation, an alternative to JSON, YAML and TOML,
 is a sophisticated language to express data that supports expressions,
@@ -87,10 +87,12 @@ type Person = {
 
 # Features
 
++ [ ] Encode
++ [ ] Pretty printer
 + [ ] Formatter
-+ [ ] Syntax highlighting
++ [ ] Analyzer
++ [ ] Built-in Date support
++ [ ] VSCode Syntax highlighting
 + [ ] Types
 + [ ] Type/schema checking
-+ [ ] Associate spans to AST
-+ [ ] Better errors
 

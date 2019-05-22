@@ -4,7 +4,7 @@ class MapKeyParser {
   static KeyChain parse(State state) {
     final variable = state.consumeIf(TokenType.key);
     if(variable == null) {
-      throw Exception("Variable expected!");
+      throw SyntaxError(state.peek()?.span, "Variable expected");
     }
 
     final accesses = <Access>[];
@@ -16,9 +16,9 @@ class MapKeyParser {
         state.consume();
         final key = state.consumeIf(TokenType.key);
         if(key == null) {
-          throw Exception("Key expected!");
+          throw SyntaxError(state.peek()?.span, "Key expected");
         }
-        accesses.add(MemberAccess(key.text));
+        accesses.add(MemberAccess(next.span.expand(key.span), key.text));
       } else if(next.type == TokenType.leftSquareBracket) {
         accesses.add(SubscriptParser.parse(state));
       } else {
@@ -26,7 +26,7 @@ class MapKeyParser {
       }
     }
 
-    return KeyChain(variable.text, accesses);
+    return KeyChain.fromToken(variable, accesses);
   }
 }
 
@@ -34,7 +34,7 @@ class IdentifierValueParser {
   static VarUse parse(State state) {
     final variable = state.consumeIf(TokenType.identifier);
     if(variable == null) {
-      throw Exception("Variable expected!");
+      throw SyntaxError(state.peek()?.span, "Variable expected");
     }
 
     final accesses = <Access>[];
@@ -46,9 +46,9 @@ class IdentifierValueParser {
         state.consume();
         final key = state.consumeIf(TokenType.key);
         if(key == null) {
-          throw Exception("Key expected!");
+          throw SyntaxError(state.peek()?.span, "Key expected");
         }
-        accesses.add(MemberAccess(key.text));
+        accesses.add(MemberAccess(next.span.expand(key.span), key.text));
       } else if(next.type == TokenType.leftSquareBracket) {
         accesses.add(SubscriptParser.parse(state));
       } else {
@@ -56,24 +56,26 @@ class IdentifierValueParser {
       }
     }
 
-    return VarUse(variable.text, accesses);
+    return VarUse.fromToken(variable, accesses);
   }
 }
 
 class SubscriptParser {
   static SubscriptAccess parse(State state) {
-    if(state.consumeIf(TokenType.leftSquareBracket) == null) {
-      throw Exception("'[' expected in a subscript access");
+    final leftBracket = state.consumeIf(TokenType.leftSquareBracket);
+    if(leftBracket == null) {
+      throw SyntaxError(state.peek()?.span, "'[' missing in subscript access");
     }
 
     // TODO could be expression
     final value = IntParser.parse(state);
 
-    if(state.consumeIf(TokenType.rightSquareBracket) == null) {
-      throw Exception("']' expected in a subscript access");
+    final rightBracket = state.consumeIf(TokenType.rightSquareBracket);
+    if(rightBracket == null) {
+      throw SyntaxError(state.peek()?.span, "']' missing in subscript access");
     }
 
-    return SubscriptAccess(value);
+    return SubscriptAccess(leftBracket.span.expand(rightBracket.span), value);
   }
 }
 

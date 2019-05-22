@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import '../scanner/scanner.dart';
 import '../ast/ast.dart';
 import 'state.dart';
 import 'package:don/src/decode/error/error.dart';
+import 'package:source_span/source_span.dart';
 
 part 'member.dart';
 part 'set.dart';
@@ -32,7 +35,7 @@ class Parser {
       } else if (token.type == TokenType.comment) {
         _state.consume();
       } else {
-        throw Exception('Invalid root clause!');
+        throw SyntaxError(token?.span, 'Invalid root clause');
       }
     }
 
@@ -51,14 +54,20 @@ class MapBodyParser {
       values.add(value);
 
       // Separator
-      if (state.done) return MapValue(values);
+      if (state.done) break;
 
       state.consumeMany(TokenType.newLine);
 
       if (state.peek()?.type != TokenType.key) break;
     }
 
-    return MapValue(values);
+    FileSpan span;
+
+    if (values.isNotEmpty) {
+      span = values.first.span.expand(values.last.span);
+    } // TODO compute span if values are empty
+
+    return MapValue(span, values);
   }
 }
 
@@ -66,17 +75,19 @@ class MapParser {
   MapParser();
 
   static MapValue parse(State state) {
-    if (state.consumeIf(TokenType.leftCurlyBracket) == null) {
-      throw Exception("Map value should start with '{'");
+    final leftBracket = state.consumeIf(TokenType.leftCurlyBracket);
+    if (leftBracket == null) {
+      throw SyntaxError(state.peek()?.span, "Map value should start with '{'");
     }
 
     final values = MapBodyParser.parse(state);
 
-    if (state.consumeIf(TokenType.rightCurlyBracket) == null) {
-      throw Exception("Map value should end with '}'");
+    final rightBracket = state.consumeIf(TokenType.rightCurlyBracket);
+    if (rightBracket == null) {
+      throw SyntaxError(state.peek()?.span, "Map value should end with '}'");
     }
 
-    return values;
+    return MapValue(leftBracket.span.expand(rightBracket.span), values.values);
   }
 }
 
@@ -88,11 +99,11 @@ class MapEntryParser {
 
     final op = AssignOpParser.parse(state);
     if (op == null) {
-      throw Exception("Map entry must contain operator");
+      throw SyntaxError(state.peek()?.span, "Operator missing on Map entry");
     }
 
     final value = ValueParser.parse(state);
-    return MapEntryValue(key, value, op: op);
+    return MapEntryValue(key.span.expand(value.span), key, value, op);
   }
 }
 
@@ -101,27 +112,29 @@ class ValueParser {
     final value = state.peek();
     if (value.type == TokenType.integer) {
       state.consume();
-      return IntValue(int.parse(value.text));
+      return IntValue(value.span, int.parse(value.text));
     } else if (value.type == TokenType.double) {
       state.consume();
-      return DoubleValue(double.parse(value.text));
+      return DoubleValue(value.span, double.parse(value.text));
     } else if (value.type == TokenType.string) {
       state.consume();
-      return StringValue(value.text.substring(1, value.text.length-1));
+      // TODO support multiple string literals
+      return StringValue(
+          value.span, value.text.substring(1, value.text.length - 1));
     } else if (value.type == TokenType.leftCurlyBracket) {
       return MapParser.parse(state);
     } else if (value.type == TokenType.leftSquareBracket) {
       return ListParser.parse(state);
     } else if (value.type == TokenType.true_) {
       state.consume();
-      return BoolValue(true);
+      return BoolValue(value.span, true);
     } else if (value.type == TokenType.false_) {
       state.consume();
-      return BoolValue(false);
+      return BoolValue(value.span, false);
     } else if (value.type == TokenType.identifier) {
       return IdentifierValueParser.parse(state);
     }
-    throw UnimplementedError("Unknown value");
+    throw SyntaxError(value?.span, "Unknown value");
   }
 }
 
@@ -129,23 +142,25 @@ class IntParser {
   static IntValue parse(State state) {
     final value = state.consumeIf(TokenType.integer);
     if (value == null) {
-      throw Exception("Integer expected!");
+      throw SyntaxError(state.peek()?.span, "Integer expected");
     }
 
-    return IntValue(int.parse(value.text));
+    return IntValue(value.span, int.parse(value.text));
   }
 }
 
 class ListParser {
   static ListValue parse(State state) {
-    if (state.consumeIf(TokenType.leftSquareBracket) == null) {
-      throw Exception("List value should start with '['");
+    final leftBracket = state.consumeIf(TokenType.leftSquareBracket);
+    if (leftBracket == null) {
+      throw SyntaxError(state.peek()?.span, "List value should start with '['");
     }
 
     state.consumeMany(TokenType.newLine);
 
-    if (state.consumeIf(TokenType.rightSquareBracket) != null) {
-      return ListValue([]);
+    var rightBracket = state.consumeIf(TokenType.rightSquareBracket);
+    if (rightBracket != null) {
+      return ListValue(leftBracket.span.expand(rightBracket.span), []);
     }
 
     bool rawMap = false;
@@ -185,31 +200,35 @@ class ListParser {
 
     state.consumeMany(TokenType.newLine);
 
-    if (state.consumeIf(TokenType.rightSquareBracket) == null) {
-      throw Exception("List value should end with ']'");
+    rightBracket = state.consumeIf(TokenType.rightSquareBracket);
+    if (rightBracket == null) {
+      throw SyntaxError(state.peek()?.span, "List value should end with ']'");
     }
 
-    return ListValue(values);
+    return ListValue(leftBracket.span.expand(rightBracket.span), values);
   }
 }
 
 class LetParser {
   static Let parse(State state) {
-    if (state.consumeIf(TokenType.let) == null) {
-      throw Exception("'let' expected");
+    final let = state.consumeIf(TokenType.let);
+    if (let == null) {
+      throw SyntaxError(state.peek()?.span, "'let' expected");
     }
 
     final identifier = state.consumeIf(TokenType.identifier);
-    if(identifier == null) {
-      throw SyntaxError("Identifier expected in 'let' expression");
+    if (identifier == null) {
+      throw SyntaxError(state.peek()?.span ?? let.span,
+          "Identifier missing in 'let' statement");
     }
 
-    if(state.consumeIf(TokenType.assign) == null) {
-      throw SyntaxError("Assign operator ':' missing in Let statement");
+    if (state.consumeIf(TokenType.assign) == null) {
+      throw SyntaxError(state.peek()?.span ?? let.span,
+          "Assign operator ':' missing in 'let' statement");
     }
 
     final value = ValueParser.parse(state);
 
-    return Let(identifier.text, value);
+    return Let(let.span.expand(value.span), identifier.text, value);
   }
 }

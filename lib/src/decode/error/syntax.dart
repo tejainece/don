@@ -1,13 +1,16 @@
+import 'package:source_span/source_span.dart';
 
 class SyntaxError {
-  // TODO span
+  final FileSpan span;
 
   final String message;
 
-  SyntaxError(this.message);
+  SyntaxError(this.span, this.message);
 
   String toString() {
-    // TODO
-    return message;
+    if(span == null) {
+      return "Unexpected end of file: $message";
+    }
+    return span.message(message, color: true);
   }
 }

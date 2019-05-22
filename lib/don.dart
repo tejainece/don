@@ -4,5 +4,4 @@
 library ooml;
 
 export 'src/decode/decode.dart';
-
-// TODO: Export any libraries intended for clients of this package.
+export 'src/encode/encode.dart';

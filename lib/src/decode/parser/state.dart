@@ -1,5 +1,7 @@
 import 'dart:collection';
 
+import 'package:don/parser.dart';
+
 import '../scanner/scanner.dart';
 import 'package:source_span/source_span.dart';
 
@@ -116,5 +118,10 @@ class State {
     }
 
     return result;
+  }
+
+  Token get last {
+    if(scanner.tokens.isEmpty) return null;
+    return scanner.tokens.last;
   }
 }

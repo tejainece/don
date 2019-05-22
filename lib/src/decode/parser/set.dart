@@ -2,19 +2,16 @@ part of 'parser.dart';
 
 class AssignOpParser {
   static AssignOp parse(State state) {
-    final opToken = state.peek();
+    final token = state.peek();
 
-    if(opToken.type == TokenType.assign) {
-      state.consume();
-      return AssignOp.assign;
-    } else if(opToken.type == TokenType.addAssign) {
-      state.consume();
-      return AssignOp.addAssign;
-    } else if(opToken.type == TokenType.mulAssign) {
-      state.consume();
-      return AssignOp.mulAssign;
+    switch(token.type) {
+      case TokenType.assign:
+      case TokenType.addAssign:
+      case TokenType.mulAssign:
+        state.consume();
+        return AssignOp.fromToken(token);
+      default:
+        throw SyntaxError(token?.span, "Assign operator expected");
     }
-
-    throw SyntaxError("Invalid assign operator");
   }
 }
