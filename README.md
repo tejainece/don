@@ -85,10 +85,12 @@ type Person = {
 }
 ```
 
-# Features
+# TODO
 
 ## Prio1
 + [ ] Preserve parenthesis
++ [ ] Encode multiline strings
++ [ ] Encode utf8 strings
 + [ ] Formatter
 + [ ] Concise encoder
 ## Prio2
