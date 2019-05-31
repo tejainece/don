@@ -27,9 +27,9 @@ const _opMap = <TokenType, TokenType>{
   TokenType.divAssign: TokenType.div,
   TokenType.modAssign: TokenType.mod,
   TokenType.powAssign: TokenType.pow,
-  TokenType.orAssign: TokenType.or,
-  TokenType.andAssign: TokenType.and,
-  TokenType.xorAssign: TokenType.xor,
+  TokenType.orAssign: TokenType.bitwiseOr,
+  TokenType.andAssign: TokenType.bitwiseAnd,
+  TokenType.xorAssign: TokenType.bitwiseXor,
 };
 
 num _numOp(Operator op, num left, num right) {
@@ -46,11 +46,11 @@ num _numOp(Operator op, num left, num right) {
       return left % right;
     case TokenType.pow:
       return pow(left, right);
-    case TokenType.or:
+    case TokenType.bitwiseOr:
       return left.toInt() | right.toInt();
-    case TokenType.and:
+    case TokenType.bitwiseAnd:
       return left.toInt() & right.toInt();
-    case TokenType.xor:
+    case TokenType.bitwiseXor:
       return left.toInt() ^ right.toInt();
     default:
       throw SyntaxError(op.span, "Invalid operator");
@@ -72,10 +72,14 @@ dynamic _expression(Expression exp, Variables variables) {
 
   if (left is String) {
     if (right is String) {
-      if (exp.op.token != TokenType.plus) {
-        throw SyntaxError(exp.op.span, "Invalid operation");
+      if (exp.op.token == TokenType.plus) {
+        return left + right;
       }
-      return left + right;
+      if (exp.op.token == TokenType.bitwiseOr) {
+        return left + "\r\n" + right;
+      }
+
+      throw SyntaxError(exp.op.span, "Invalid operation");
     }
     if (right is int) {
       if (exp.op.token != TokenType.asterisk) {

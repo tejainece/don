@@ -1,8 +1,8 @@
 # DON
 
 Basic Object Notation, an alternative to JSON, YAML and TOML,
-is a sophisticated language to express data that supports expressions,
-variables, types, schema validations and content assist.
+is a sophisticated language to express data. It supports expressions,
+variables, types, schema validations and code completion.
 
 # A simple example:
 
@@ -89,7 +89,6 @@ type Person = {
 
 ## Prio1
 + [ ] Preserve parenthesis
-+ [ ] Multiline strings
 + [ ] Formatter
 + [ ] Concise encoder
 ## Prio2

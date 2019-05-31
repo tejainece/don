@@ -7,6 +7,9 @@ const precedenceLookup = <TokenType, int>{
   TokenType.mod: 20,
   TokenType.plus: 30,
   TokenType.minus: 30,
+  TokenType.bitwiseAnd: 40,
+  TokenType.bitwiseXor: 50,
+  TokenType.bitwiseOr: 60,
 };
 
 class ExpressionParser {
@@ -42,6 +45,7 @@ class ExpressionParser {
   }
 
   static Value _testNextOp(State state, int precedence) {
+    state.consumeMany(TokenType.newLine);
     var next = ValueParser.parse(state);
     Token op = state.peek();
     if(op?.type == TokenType.pow) {
@@ -59,6 +63,7 @@ class ExpressionParser {
     left ??= ValueParser.parse(state);
     Token op = state.consumeIf(TokenType.pow);
     if (op == null) return left;
+    state.consumeMany(TokenType.newLine);
     var right = _exponent(state, null);
     return Expression(
         left.span.expand(right.span), left, Operator.fromToken(op), right);

@@ -1,0 +1,6 @@
+one = "Hello " +
+  "world!"
+two = "Whats" +
+  " up?"
+three = "Whats up?" |
+        "How are you?"

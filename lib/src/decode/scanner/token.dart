@@ -43,9 +43,9 @@ enum TokenType {
   div,
   mod,
   pow,
-  or,
-  and,
-  xor,
+  bitwiseOr,
+  bitwiseAnd,
+  bitwiseXor,
 
   // Brackets
   leftSquareBracket,
@@ -87,9 +87,9 @@ final normalPatterns = <Pattern, TokenType>{
   '/': TokenType.div,
   '%': TokenType.mod,
   '**': TokenType.pow,
-  '|': TokenType.or,
-  '&': TokenType.and,
-  '^': TokenType.xor,
+  '|': TokenType.bitwiseOr,
+  '&': TokenType.bitwiseAnd,
+  '^': TokenType.bitwiseXor,
 
   '+=': TokenType.addAssign,
   '-=': TokenType.subAssign,

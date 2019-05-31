@@ -20,5 +20,19 @@ void main() {
       expect(value, equals(compare));
        */
     });
+
+    test('Multiline string', () async {
+      final inputStr =
+      await File("test_data/primitive/multiline_string.don").readAsString();
+      final value = decode(inputStr);
+      print(value);
+      /*
+      // print(JsonEncoder.withIndent('  ').convert(value));
+      final compare =
+          json.decode(await File("test_data/list/int.json").readAsString());
+      expect(value, equals(compare));
+       */
+    });
+
   });
 }

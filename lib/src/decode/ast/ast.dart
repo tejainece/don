@@ -179,11 +179,11 @@ class Operator implements AstNode {
 
   bool get isPow => token == TokenType.pow;
 
-  bool get isOr => token == TokenType.or;
+  bool get isOr => token == TokenType.bitwiseOr;
 
-  bool get isAnd => token == TokenType.and;
+  bool get isAnd => token == TokenType.bitwiseAnd;
 
-  bool get isXor => token == TokenType.xor;
+  bool get isXor => token == TokenType.bitwiseXor;
 
   @override
   String toString() {
