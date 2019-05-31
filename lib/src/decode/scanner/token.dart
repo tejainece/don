@@ -32,20 +32,20 @@ enum TokenType {
   mulAssign,
   divAssign,
   modAssign,
+  powAssign,
   orAssign,
   andAssign,
   xorAssign,
 
-  /*
   plus,
-  sub,
-  mul,
+  minus,
+  asterisk,
   div,
   mod,
+  pow,
   or,
   and,
   xor,
-  */
 
   // Brackets
   leftSquareBracket,
@@ -54,6 +54,8 @@ enum TokenType {
   rightCurlyBracket,
   leftAngleBracket,
   rightAngleBracket,
+  leftBracket,
+  rightBracket,
 
   // Data
   false_,
@@ -65,6 +67,7 @@ enum TokenType {
   string,
   key,
   identifier,
+  date,
 
   let,
 }
@@ -78,13 +81,24 @@ final normalPatterns = <Pattern, TokenType>{
   ',': TokenType.comma,
   ';': TokenType.semicolon,
 
+  '+': TokenType.plus,
+  '-': TokenType.minus,
+  '*': TokenType.asterisk,
+  '/': TokenType.div,
+  '%': TokenType.mod,
+  '**': TokenType.pow,
+  '|': TokenType.or,
+  '&': TokenType.and,
+  '^': TokenType.xor,
+
   '+=': TokenType.addAssign,
   '-=': TokenType.subAssign,
   '*=': TokenType.mulAssign,
   '/=': TokenType.divAssign,
   '%=': TokenType.modAssign,
+  '**=': TokenType.powAssign,
   '|=': TokenType.orAssign,
-  '&=': TokenType.addAssign,
+  '&=': TokenType.andAssign,
   '^=': TokenType.xorAssign,
 
   '[': TokenType.leftSquareBracket,
@@ -93,6 +107,8 @@ final normalPatterns = <Pattern, TokenType>{
   '}': TokenType.rightCurlyBracket,
   '<': TokenType.leftAngleBracket,
   '>': TokenType.rightAngleBracket,
+  '(': TokenType.leftBracket,
+  ')': TokenType.rightBracket,
 
   'let': TokenType.let,
 
@@ -108,6 +124,7 @@ final normalPatterns = <Pattern, TokenType>{
   RegExp(r'0x([A-Fa-f0-9]+)'): TokenType.hexInteger,
   RegExp(r'0b([01]+)'): TokenType.binaryInteger,
   RegExp(r'[0-9]+((\.[0-9]+)|b)?'): TokenType.double,
+  RegExp(r"@'[0-9a-zA-Z\-\+: ]*'"): TokenType.date,
   singleQuotedString: TokenType.string,
   doubleQuotedString: TokenType.string,
   RegExp(r'[A-Za-z_][A-Za-z0-9_]*'): TokenType.key,

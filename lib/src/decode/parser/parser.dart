@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:don/parser.dart';
 
 import '../scanner/scanner.dart';
 import '../ast/ast.dart';
@@ -6,14 +6,19 @@ import 'state.dart';
 import 'package:don/src/decode/error/error.dart';
 import 'package:source_span/source_span.dart';
 
+part 'expression.dart';
 part 'member.dart';
 part 'set.dart';
 
 class Parser {
   State _state;
 
-  Parser(Scanner scanner) {
-    _state = State(scanner);
+  final _errors = <SyntaxError>[];
+
+  Iterable<SyntaxError> get errors => _errors;
+
+  Parser(List<Token> tokens) {
+    _state = State(tokens);
   }
 
   Unit parse() {
@@ -26,16 +31,35 @@ class Parser {
       final token = _state.peek();
 
       if (token.type == TokenType.key) {
-        value = MapBodyParser.parse(_state);
-      } else if (token.type == TokenType.leftSquareBracket) {
-        value = ListParser.parse(_state);
+        final tempVal = MapBodyParser.parse(_state);
+        if (value == null) {
+          value = tempVal;
+        } else if (value is MapValue) {
+          value.values.addAll(tempVal.values);
+        } else {
+          _errors
+              .add(SyntaxError(tempVal.span, "Invalid override of root value"));
+        }
       } else if (token.type == TokenType.let) {
         final Let let = LetParser.parse(_state);
-        variables[let.name] = let.value;
+        variables[let.name.name] = let.value;
       } else if (token.type == TokenType.comment) {
         _state.consume();
       } else {
-        throw SyntaxError(token?.span, 'Invalid root clause');
+        Value tempVal;
+        try {
+          tempVal = ExpressionParser.parse(_state);
+        } on SyntaxError catch(e) {
+          rethrow;
+        }
+        if(tempVal != null) {
+          if(value == null) {
+            value = tempVal;
+          } else {
+            _errors
+                .add(SyntaxError(tempVal.span, "Invalid override of root value"));
+          }
+        }
       }
     }
 
@@ -102,7 +126,7 @@ class MapEntryParser {
       throw SyntaxError(state.peek()?.span, "Operator missing on Map entry");
     }
 
-    final value = ValueParser.parse(state);
+    final value = ExpressionParser.parse(state);
     return MapEntryValue(key.span.expand(value.span), key, value, op);
   }
 }
@@ -110,28 +134,47 @@ class MapEntryParser {
 class ValueParser {
   static Value parse(State state) {
     final value = state.peek();
+
+    if(value == null) {
+      throw SyntaxError(state.last.span, "Unexpected end of file. Expression/Value expected");
+    }
+
+    if(value.type == TokenType.leftBracket) {
+      return ParenthesizedExpressionParser.parse(state);
+    }
     if (value.type == TokenType.integer) {
       state.consume();
       return IntValue(value.span, int.parse(value.text));
-    } else if (value.type == TokenType.double) {
+    }
+    if (value.type == TokenType.double) {
       state.consume();
       return DoubleValue(value.span, double.parse(value.text));
-    } else if (value.type == TokenType.string) {
+    }
+    if (value.type == TokenType.string) {
       state.consume();
       // TODO support multiple string literals
       return StringValue(
           value.span, value.text.substring(1, value.text.length - 1));
-    } else if (value.type == TokenType.leftCurlyBracket) {
+    }
+    if (value.type == TokenType.leftCurlyBracket) {
       return MapParser.parse(state);
-    } else if (value.type == TokenType.leftSquareBracket) {
+    }
+    if (value.type == TokenType.leftSquareBracket) {
       return ListParser.parse(state);
-    } else if (value.type == TokenType.true_) {
+    }
+    if (value.type == TokenType.true_) {
       state.consume();
       return BoolValue(value.span, true);
-    } else if (value.type == TokenType.false_) {
+    }
+    if (value.type == TokenType.false_) {
       state.consume();
       return BoolValue(value.span, false);
-    } else if (value.type == TokenType.identifier) {
+    }
+    if (value.type == TokenType.date) {
+      state.consume();
+      return DateValue(value.span, value.text);
+    }
+    if (value.type == TokenType.identifier) {
       return IdentifierValueParser.parse(state);
     }
     throw SyntaxError(value?.span, "Unknown value");
@@ -190,7 +233,7 @@ class ListParser {
       state.consumeMany(TokenType.newLine);
 
       if (!angles) {
-        if (state.nextToken(TokenType.comma) == null) break;
+        if (state.consumeIf(TokenType.comma) == null) break;
       }
 
       state.consumeMany(TokenType.newLine);
@@ -229,6 +272,7 @@ class LetParser {
 
     final value = ValueParser.parse(state);
 
-    return Let(let.span.expand(value.span), identifier.text, value);
+    return Let(let.span.expand(value.span),
+        Identifier(identifier.span, identifier.text), value);
   }
 }

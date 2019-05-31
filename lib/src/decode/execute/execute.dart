@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:don/parser.dart';
 import 'package:don/src/decode/error/error.dart';
 
@@ -19,33 +20,107 @@ dynamic execute(Unit unit) {
       null, AssignOp.mkAssign(unit.value.span), unit.value, variables);
 }
 
+const _opMap = <TokenType, TokenType>{
+  TokenType.addAssign: TokenType.plus,
+  TokenType.subAssign: TokenType.minus,
+  TokenType.mulAssign: TokenType.asterisk,
+  TokenType.divAssign: TokenType.div,
+  TokenType.modAssign: TokenType.mod,
+  TokenType.powAssign: TokenType.pow,
+  TokenType.orAssign: TokenType.or,
+  TokenType.andAssign: TokenType.and,
+  TokenType.xorAssign: TokenType.xor,
+};
+
+num _numOp(Operator op, num left, num right) {
+  switch (op.token) {
+    case TokenType.plus:
+      return left + right;
+    case TokenType.minus:
+      return left - right;
+    case TokenType.asterisk:
+      return left * right;
+    case TokenType.div:
+      return left / right;
+    case TokenType.mod:
+      return left % right;
+    case TokenType.pow:
+      return pow(left, right);
+    case TokenType.or:
+      return left.toInt() | right.toInt();
+    case TokenType.and:
+      return left.toInt() & right.toInt();
+    case TokenType.xor:
+      return left.toInt() ^ right.toInt();
+    default:
+      throw SyntaxError(op.span, "Invalid operator");
+  }
+}
+
+dynamic _expression(Expression exp, Variables variables) {
+  dynamic left = _normalValue(exp.left, variables);
+  dynamic right = _normalValue(exp.right, variables);
+
+  if (left is num) {
+    if (right is! num) {
+      throw SyntaxError(exp.span, "Invalid operand ${right.type}");
+    }
+
+    final ret = _numOp(exp.op, left, right);
+    return ret;
+  }
+
+  if (left is String) {
+    if (right is String) {
+      if (exp.op.token != TokenType.plus) {
+        throw SyntaxError(exp.op.span, "Invalid operation");
+      }
+      return left + right;
+    }
+    if (right is int) {
+      if (exp.op.token != TokenType.asterisk) {
+        throw SyntaxError(exp.op.span, "Invalid operation");
+      }
+      return left * right;
+    }
+  }
+
+  // TODO bool
+
+  // TODO Date
+
+  // TODO
+
+  throw SyntaxError(exp.span, "Invalid expression");
+}
+
+dynamic _normalValue(Value value, Variables variables) {
+  if (value is DateValue) return value.value;
+  if (value is SimpleValue) return value.value;
+  if (value is VarUse) return variables.get(value);
+  if (value is Expression) {
+    final ret = _expression(value, variables);
+    return ret;
+  }
+
+  throw UnimplementedError("Unknown value type ${value?.runtimeType}");
+}
+
 dynamic _value(
     dynamic oldValue, AssignOp op, Value value, Variables variables) {
   if (op.isAssign || oldValue == null) {
-    if (value is SimpleValue) return value.value;
+    if (value is MapValue) return _map(oldValue, op, value, variables);
+    if (value is ListValue) return _list(oldValue, op, value, variables);
+
+    return _normalValue(value, variables);
+  }
+
+  if (oldValue is Map) {
     if (value is MapValue) {
       return _map(oldValue, op, value, variables);
     }
-    if (value is ListValue) {
-      return _list(oldValue, op, value, variables);
-    }
     if (value is VarUse) {
-      return variables.get(value);
-    }
-    throw UnimplementedError("Unknown value type ${value?.runtimeType}");
-  }
-
-  if (oldValue is bool) {
-    throw SyntaxError(op.span, "Operators are not supported on bool");
-  }
-
-  if (value is VarUse) {
-    final v = variables.get(value);
-    if (v == null) {
-      throw SyntaxError(value.span, "Variable not found");
-    }
-
-    if (oldValue is Map) {
+      final v = _normalValue(value, variables);
       if (!op.isAddAssign) {
         throw SyntaxError(value.span, "Invalid operator on Map");
       }
@@ -55,11 +130,14 @@ dynamic _value(
       }
       throw SyntaxError(value.span, "Invalid assignment");
     }
-
-    if (oldValue is List) {
-      if (v == null) {
-        throw SyntaxError(value.span, "Variable not found");
-      }
+    throw SyntaxError(value.span, "Invalid assignment");
+  }
+  if (oldValue is List) {
+    if (value is ListValue) {
+      return _list(oldValue, op, value, variables);
+    }
+    if (value is VarUse) {
+      final v = _normalValue(value, variables);
       if (op.isAddAssign) {
         oldValue.add(v);
         return oldValue;
@@ -73,34 +151,43 @@ dynamic _value(
       }
       throw SyntaxError(value.span, "Invalid operation on List");
     }
+    throw SyntaxError(value.span, "Invalid assignment");
   }
 
-  if (oldValue is Map) {
-    if (value is! MapValue) {
-      throw SyntaxError(value.span, "Invalid assignment");
-    }
-    return _map(oldValue, op, value, variables);
-  }
-  if (oldValue is List) {
-    if (value is! ListValue) {
-      throw SyntaxError(value.span, "Invalid assignment");
-    }
-    return _list(oldValue, op, value, variables);
+  final v = _normalValue(value, variables);
+
+  if (oldValue is bool) {
+    throw SyntaxError(op.span, "Operators are not supported on bool");
   }
 
   if (oldValue is num) {
-    if (value is NumberValue) {
-      return oldValue + value.value;
+    if (v is! num) {
+      throw SyntaxError(value.span, "Invalid value");
+    }
+    final mathOp = _opMap[op.type];
+    if (mathOp == null) {
+      throw SyntaxError(op.span, "Invalid operator");
+    }
+    return _numOp(Operator(op.span, mathOp), oldValue, v);
+  }
+
+  if (oldValue is String) {
+    if (v is String) {
+      if (op.type != TokenType.addAssign) {
+        throw SyntaxError(op.span, "Invalid operator");
+      }
+      return oldValue + v;
+    }
+    if (v is int) {
+      if (op.type != TokenType.mulAssign) {
+        throw SyntaxError(op.span, "Invalid operator");
+      }
+      return oldValue * v;
     }
     throw SyntaxError(value.span, "Invalid assignment");
   }
 
-  if (oldValue is String) {
-    if (value is StringValue) {
-      return oldValue + value.value;
-    }
-    throw SyntaxError(value.span, "Invalid assignment");
-  }
+  // TODO date
 
   throw UnimplementedError("Unknown value type ${value?.runtimeType}");
 }

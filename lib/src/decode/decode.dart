@@ -9,7 +9,7 @@ dynamic decode(String data) {
     throw scanner.errors;
   }
 
-  final value = Parser(scanner).parse();
+  final value = Parser(scanner.tokens).parse();
 
   return execute(value);
 }

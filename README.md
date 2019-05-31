@@ -87,12 +87,15 @@ type Person = {
 
 # Features
 
-+ [ ] Expressions
-+ [ ] Concise encoder
+## Prio1
++ [ ] Preserve parenthesis
++ [ ] Multiline strings
 + [ ] Formatter
++ [ ] Concise encoder
+## Prio2
 + [ ] Analyzer
-+ [ ] Built-in Date support
 + [ ] VSCode Syntax highlighting
+## Prio3
 + [ ] Types
 + [ ] Type/schema checking
 

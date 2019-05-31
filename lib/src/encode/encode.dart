@@ -3,13 +3,14 @@ String encode(dynamic model,
     {bool root = true, int level = 0, String indent = '  '}) {
   if (model == null) return "";
 
-  if (model is Map)
+  if (model is Map) {
     return encodeMap(model, level: level, indent: indent, root: root);
+  }
   if (model is List) return encodeList(model, level: level, indent: indent);
   if (model is num) return "$model";
   if (model is String) return "'$model'";
   if (model is bool) return "$model";
-  // TODO datetime
+  if (model is DateTime) return "@'${model.toIso8601String()}'";
 
   throw UnsupportedError("Unencodable type ${model.runtimeType}");
 }

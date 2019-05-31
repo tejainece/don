@@ -10,6 +10,7 @@ import 'package:dart_language_server/src/protocol/language_server/wireformat.dar
 
 /// https://microsoft.github.io/language-server-protocol/specification
 /// https://blog.getgauge.io/gauge-and-the-language-server-protocol-c56fbcfba177
+/// https://vscode.readthedocs.io/en/latest/extensions/example-language-server/
 class DonLangServer extends lsp.LanguageServer {
   void _makeCapabilties(lsp.ServerCapabilities$Builder b) {
     b.textDocumentSync = lsp.TextDocumentSyncOptions((b) => b
@@ -54,10 +55,14 @@ class DonLangServer extends lsp.LanguageServer {
   }
 
   @override
-  Stream<lsp.ShowMessageParams> get showMessages {}
+  Stream<lsp.ShowMessageParams> get showMessages {
+    // TODO
+  }
 
   @override
-  Stream<lsp.ApplyWorkspaceEditParams> get workspaceEdits {}
+  Stream<lsp.ApplyWorkspaceEditParams> get workspaceEdits {
+    // TODO
+  }
 
   @override
   Stream<lsp.Diagnostics> get diagnostics {
@@ -82,7 +87,9 @@ class DonLangServer extends lsp.LanguageServer {
   Future<List<dynamic>> textDocumentCodeAction(
       lsp.TextDocumentIdentifier documentId,
       lsp.Range range,
-      lsp.CodeActionContext context) {}
+      lsp.CodeActionContext context) {
+    // TODO
+  }
 
   @override
   Future<dynamic> textDocumentHover(
@@ -143,4 +150,20 @@ class DonLangServer extends lsp.LanguageServer {
 
   @override
   void initialized() {}
+
+  @override
+  void textDocumentDidOpen(lsp. TextDocumentItem document) {
+    // TODO implement
+  }
+
+  @override
+  void textDocumentDidChange(lsp.VersionedTextDocumentIdentifier documentId,
+      List<lsp.TextDocumentContentChangeEvent> changes) {
+    // TODO implement
+  }
+
+  @override
+  void textDocumentDidClose(lsp.TextDocumentIdentifier documentId) {
+    // TODO implement
+  }
 }

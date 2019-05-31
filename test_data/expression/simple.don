@@ -1,0 +1,11 @@
+# number = 5 + 6 + 7
+# expression = 5 + 5 * 6
+# expression1 = 5 + 5 * 6 + 5
+# expression2 = (5 + 5) * (6 + 5)
+# expression3 = (5 + 5) * 6
+# expression4 = 5 * (6 + 5)
+# expression5 = 2 ** 3
+expression6 = 2.0 ** 3.0 ** 4.0
+expression7 = 2.0 ** (3.0 ** 4.0)
+expression8 = 2 ** 2 + 1
+expression9 = 1 + 2 ** 2

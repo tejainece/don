@@ -1,5 +1,3 @@
-import 'dart:collection';
-
 import 'package:don/parser.dart';
 
 import '../scanner/scanner.dart';
@@ -7,18 +5,17 @@ import 'package:source_span/source_span.dart';
 
 class State {
   final List<ScannerError> errors = [];
-  final Scanner scanner;
+  //final Scanner scanner;
+  final List<Token> tokens;
   int _index = -1;
 
-  State(this.scanner) {
-    errors.addAll(scanner.errors);
-  }
+  State(this.tokens);
 
   List<Token> computeRest() {
     if (done) return [];
     //print(_index);
     //print(scanner.tokens.skip(_index));
-    return scanner.tokens.skip(_index).toList();
+    return tokens.skip(_index).toList();
   }
 
   /// Joins the [tokens] into a single [FileSpan].
@@ -27,18 +24,18 @@ class State {
   }
 
   /// Returns `true` if there is no more input.
-  bool get done => _index >= scanner.tokens.length - 1;
+  bool get done => _index >= tokens.length - 1;
 
   /// Lookahead without consuming.
   Token peek() {
     if (done) return null;
-    return scanner.tokens[_index + 1];
+    return tokens[_index + 1];
   }
 
   /// Lookahead and consume.
   Token consume() {
     if (done) return null;
-    return scanner.tokens[++_index];
+    return tokens[++_index];
   }
 
   Token consumeIf(TokenType type) {
@@ -51,32 +48,6 @@ class State {
 
   void consumeMany(TokenType type) {
     while(consumeIf(type) != null);
-  }
-
-  /// Attempts to scan a sequence of tokens, in the given order.
-  ///
-  /// Returns a [Queue] (LIFO), or `null`.
-  Queue<Token> next(Iterable<TokenType> types) {
-    if (_index > scanner.tokens.length - types.length - 1) return null;
-
-    var tokens = Queue<Token>();
-
-    for (int i = 0; i < types.length; i++) {
-      var token = scanner.tokens[_index + i + 1];
-
-      if (token.type != types.elementAt(i)) return null;
-
-      tokens.addFirst(token);
-    }
-
-    _index += types.length;
-    return tokens;
-  }
-
-  /// Calls [next], only returning one [Token].
-  Token nextToken(TokenType type) {
-    return next([type])?.removeFirst();
-    //return peek()?.type == type ? consume() : null;
   }
 
   Token nextIfOneOf(Iterable<TokenType> token) {
@@ -121,7 +92,7 @@ class State {
   }
 
   Token get last {
-    if(scanner.tokens.isEmpty) return null;
-    return scanner.tokens.last;
+    if(tokens.isEmpty) return null;
+    return tokens.last;
   }
 }

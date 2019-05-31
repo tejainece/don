@@ -78,9 +78,3 @@ class SubscriptParser {
     return SubscriptAccess(leftBracket.span.expand(rightBracket.span), value);
   }
 }
-
-class ExpressionParser {
-  static Expression parse(State state) {
-    // TODO
-  }
-}

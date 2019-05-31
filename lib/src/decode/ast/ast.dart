@@ -3,6 +3,7 @@ import 'package:source_span/source_span.dart';
 import '../scanner/scanner.dart';
 
 part 'comment.dart';
+part 'value.dart';
 
 abstract class AstNode {
   FileSpan get span;
@@ -35,6 +36,9 @@ class MapValue implements Value, AstNode {
   factory MapValue.empty() {
     return MapValue(null, []);
   }
+
+  @override
+  String get type => "Map";
 }
 
 class AssignOp implements AstNode {
@@ -46,7 +50,7 @@ class AssignOp implements AstNode {
 
   factory AssignOp.fromToken(Token token) => AssignOp(token.span, token.type);
 
-  AssignOp.mkAssign(this.span): type = TokenType.assign;
+  AssignOp.mkAssign(this.span) : type = TokenType.assign;
 
   bool get isAssign => type == TokenType.assign;
 
@@ -71,58 +75,6 @@ class MapEntryValue implements AstNode {
   String toString() => '$key: $value';
 }
 
-abstract class Value implements AstNode {}
-
-abstract class SimpleValue<T> implements Value {
-  T get value;
-}
-
-abstract class NumberValue<T extends num> implements SimpleValue<T> {}
-
-class StringValue implements SimpleValue<String>, Value, AstNode {
-  final FileSpan span;
-
-  final String value;
-
-  StringValue(this.span, this.value);
-
-  @override
-  String toString() => value;
-}
-
-class IntValue implements NumberValue<int>, Value, AstNode {
-  final FileSpan span;
-
-  final int value;
-
-  IntValue(this.span, this.value);
-
-  @override
-  String toString() => value.toString();
-}
-
-class DoubleValue implements NumberValue<double>, Value, AstNode {
-  final FileSpan span;
-
-  final double value;
-
-  DoubleValue(this.span, this.value);
-
-  @override
-  String toString() => value.toString();
-}
-
-class BoolValue implements SimpleValue<bool>, Value, AstNode {
-  final FileSpan span;
-
-  final bool value;
-
-  BoolValue(this.span, this.value);
-
-  @override
-  String toString() => value.toString();
-}
-
 class ListValue implements Value, AstNode {
   final FileSpan span;
 
@@ -140,12 +92,23 @@ class ListValue implements Value, AstNode {
 
     return sb.toString();
   }
+
+  @override
+  String get type => "List";
+}
+
+class Identifier implements AstNode {
+  final FileSpan span;
+
+  final String name;
+
+  Identifier(this.span, this.name);
 }
 
 class Let implements AstNode {
   final FileSpan span;
 
-  final String name;
+  final Identifier name;
 
   final Value value;
 
@@ -174,9 +137,58 @@ class Unit {
 class Expression implements Value {
   final FileSpan span;
 
-  // TODO
+  final Value left;
 
-  Expression(this.span);
+  final Operator op;
+
+  final Value right;
+
+  final bool isParenthesized;
+
+  Expression(this.span, this.left, this.op, this.right,
+      {this.isParenthesized: false});
+
+  String toString() {
+    return "($left $op $right)";
+  }
+
+  @override
+  String get type => "Expression";
+}
+
+class Operator implements AstNode {
+  final FileSpan span;
+
+  final TokenType token;
+
+  Operator(this.span, this.token);
+
+  factory Operator.fromToken(Token token) {
+    return Operator(token.span, token.type);
+  }
+
+  bool get isAdd => token == TokenType.plus;
+
+  bool get isSubtract => token == TokenType.minus;
+
+  bool get isTimes => token == TokenType.asterisk;
+
+  bool get isDiv => token == TokenType.div;
+
+  bool get isMod => token == TokenType.mod;
+
+  bool get isPow => token == TokenType.pow;
+
+  bool get isOr => token == TokenType.or;
+
+  bool get isAnd => token == TokenType.and;
+
+  bool get isXor => token == TokenType.xor;
+
+  @override
+  String toString() {
+    return token.toString();
+  }
 }
 
 abstract class Access implements AstNode {}
@@ -209,18 +221,36 @@ class VarUse implements Value, AstNode {
   factory VarUse.fromToken(Token token, List<Access> accesses) {
     return VarUse(token.span, token.text, accesses);
   }
+
+  @override
+  String get type => "VarSuubstitution";
 }
 
 class KeyChain implements Value, AstNode {
   final FileSpan span;
 
-  final String identifier;
+  final StartKey startKey;
 
   final List<Access> accesses;
 
-  KeyChain(this.span, this.identifier, this.accesses);
+  KeyChain(this.span, this.startKey, this.accesses);
 
   factory KeyChain.fromToken(Token token, List<Access> accesses) {
-    return KeyChain(token.span, token.text, accesses);
+    return KeyChain(token.span, StartKey.fromToken(token), accesses);
   }
+
+  String get identifier => startKey.name;
+
+  @override
+  String get type => "KeySubstitution";
+}
+
+class StartKey implements AstNode {
+  final FileSpan span;
+
+  final String name;
+
+  StartKey(this.span, this.name);
+
+  factory StartKey.fromToken(Token token) => StartKey(token.span, token.text);
 }
